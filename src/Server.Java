@@ -1,38 +1,60 @@
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+class ServerSetup implements User {
+
+    private ChatFrame serverChatFrame;
+    private InputStream input;
+    private OutputStream output;
+
+    public ServerSetup() {
+        serverChatFrame = new ChatFrame(this, "Server", "Client", false);
+    }
+
+    public void run() throws IOException {
+        ServerSocket serverSocket = new ServerSocket(9999);
+        System.out.println("SERVER:- Started listening to 9999");
+        
+        serverChatFrame.setActive(false);
+        System.out.println("SERVER:- Waiting for client");
+        Socket socket = serverSocket.accept();
+
+        input = socket.getInputStream();
+        output = socket.getOutputStream();
+
+        System.out.println("SERVER:- Connected to Client!");
+        serverChatFrame.setActive(true);
+    }
+
+    public void sendMessage() throws IOException {
+        Scanner sc = new Scanner(System.in);
+        String send = serverChatFrame.getMessage();
+        if (send != null && !send.equals("")) {
+            output.write(send.getBytes());
+            System.out.println("SERVER:- Message sent to client: " + send);
+        }
+    }
+
+    @Override
+    public void receiveMessage() throws IOException {
+        byte request[] = new byte[100];
+        input.read(request);
+        String received = new String(request).trim();
+        if (received != null && !received.equals("")) {
+            System.out.println("SERVER:- Received message from client: " + received);
+        }
+    }
+}
 
 public class Server {
 
     public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(9999);
-        ChatFrame serverChatFrame = new ChatFrame("Server", "Client", false);
-        System.out.println("Started listening to 9999");
+        ServerSetup server = new ServerSetup();
+        server.run();
 
         while (true) {
-            serverChatFrame.setActive(false);
-            System.out.println("Waiting for client");
-            Socket socket = serverSocket.accept();
-
-            InputStream input = socket.getInputStream();
-            OutputStream output = socket.getOutputStream();
-
-            System.out.println("Connected to Client!");
-            serverChatFrame.setActive(true);
-
-            byte request[] = new byte[100];
-            input.read(request);
-            String received = new String(request).trim();
-
-            System.out.println("Received message from client: " + received);
-
-            // output.write();
-
-            System.out.println("Message sent to client: ");
-            socket.close();
+            server.receiveMessage();
         }
-
     }
 }
