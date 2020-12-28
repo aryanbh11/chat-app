@@ -32,6 +32,7 @@ class ServerSetup implements User {
         String send = serverChatFrame.getMessage();
         if (send != null && !send.equals("")) {
             output.write(send.getBytes());
+            serverChatFrame.addMessage("YOU", send);
             System.out.println("SERVER:- Message sent to client: " + send);
         }
     }
@@ -42,6 +43,7 @@ class ServerSetup implements User {
         input.read(request);
         String received = new String(request).trim();
         if (received != null && !received.equals("")) {
+            serverChatFrame.addMessage("CLIENT", received);
             System.out.println("SERVER:- Received message from client: " + received);
         }
     }

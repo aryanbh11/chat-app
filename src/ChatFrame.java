@@ -100,6 +100,10 @@ public class ChatFrame extends JFrame implements ActionListener {
         return messageBox.getText();
     }
 
+    public void addMessage(String from, String message) {
+        textArea.append(from + ": " + message + "\n");
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == sendButton) {
