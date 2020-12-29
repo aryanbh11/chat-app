@@ -13,14 +13,14 @@ class ClientSetup implements User {
     }
 
     public void run() throws IOException {
-        Socket socket = new Socket("127.0.0.1", 9999);
-        System.out.println("CLIENT:- Connected to Server!");
+            Socket socket = new Socket("127.0.0.1", 9999);
+            System.out.println("CLIENT:- Connected to Server!");
 
-        input = socket.getInputStream();
-        output = socket.getOutputStream();
-        
+            input = socket.getInputStream();
+            output = socket.getOutputStream();        
     }
 
+    @Override
     public void sendMessage() throws IOException {
         Scanner sc = new Scanner(System.in);
         String send = clientChatFrame.getMessage();
@@ -31,15 +31,17 @@ class ClientSetup implements User {
         }
     }
 
-    public void receiveMessage() throws IOException {
-        byte[] response = new byte[100];
-        input.read(response);
+    @Override
+    public int receiveMessage() throws IOException {
+        byte[] response = new byte[1000];
+        int status = input.read(response);
         String received = new String(response).trim();
 
         if (received != null && !received.equals("")) {
             clientChatFrame.addMessage("SERVER", received);
             System.out.println("CLIENT:- Received message from server: " + received);
         }
+        return status;
     }
 
 }
@@ -51,7 +53,10 @@ public class Client {
         client.run();
 
         while (true) {
-            client.receiveMessage();
+            int status = client.receiveMessage();
+            if (status == -1) {
+                System.exit(0);
+            }
         }
     }
 }

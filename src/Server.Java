@@ -7,26 +7,30 @@ class ServerSetup implements User {
     private ChatFrame serverChatFrame;
     private InputStream input;
     private OutputStream output;
+    private Socket socket;
+    private ServerSocket serverSocket;
 
     public ServerSetup() {
         serverChatFrame = new ChatFrame(this, "Server", "Client", false);
     }
 
     public void run() throws IOException {
-        ServerSocket serverSocket = new ServerSocket(9999);
+        serverSocket = new ServerSocket(9999);
         System.out.println("SERVER:- Started listening to 9999");
-        
+
         serverChatFrame.setActive(false);
         System.out.println("SERVER:- Waiting for client");
-        Socket socket = serverSocket.accept();
+        socket = serverSocket.accept();
 
         input = socket.getInputStream();
         output = socket.getOutputStream();
 
         System.out.println("SERVER:- Connected to Client!");
+        serverChatFrame.resetChat();
         serverChatFrame.setActive(true);
     }
 
+    @Override
     public void sendMessage() throws IOException {
         Scanner sc = new Scanner(System.in);
         String send = serverChatFrame.getMessage();
@@ -38,14 +42,21 @@ class ServerSetup implements User {
     }
 
     @Override
-    public void receiveMessage() throws IOException {
-        byte request[] = new byte[100];
-        input.read(request);
+    public int receiveMessage() throws IOException {
+        byte request[] = new byte[1000];
+        int status = input.read(request);
         String received = new String(request).trim();
         if (received != null && !received.equals("")) {
             serverChatFrame.addMessage("CLIENT", received);
             System.out.println("SERVER:- Received message from client: " + received);
         }
+        return status;
+    }
+
+    public void reset() throws IOException {
+        serverChatFrame.setActive(false); 
+        serverSocket.close();  
+        this.run(); 
     }
 }
 
@@ -56,7 +67,10 @@ public class Server {
         server.run();
 
         while (true) {
-            server.receiveMessage();
+            int status = server.receiveMessage();
+            if (status == -1) {
+                server.reset();
+            }
         }
     }
 }
